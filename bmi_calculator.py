@@ -1,12 +1,16 @@
 from tkinter import *
+from pymongo import MongoClient
 
+# TO-DO: Create save, history button
+# TO-DO: Different units for input
+# TO-DO: Add Sign up option
 
 class bmiCalculator:
     def __init__(self):
 
-        self.main = Tk()
-        self.main.title('BMI Calculator')
-        self.main.geometry('800x800')
+        self.root = Tk()
+        self.root.title('BMI Calculator')
+        self.root.geometry('800x800')
 
         self.uname = StringVar()
         self.pswd = StringVar()
@@ -16,26 +20,29 @@ class bmiCalculator:
         self.bmi = DoubleVar()
         self.logged = False
 
-        self.unameLabel = Label(self.main, text = 'User Name:')
-        self.unameEntry = Entry(self.main, textvariable = self.uname, cursor = 'xterm', justify = CENTER)
+        self.unameLabel = Label(self.root, text = 'User Name:')
+        self.unameEntry = Entry(self.root, textvariable = self.uname, cursor = 'xterm', justify = CENTER)
 
-        self.pswdLabel = Label(self.main, text = 'Password:')
-        self.pswdEntry = Entry(self.main, textvariable = self.pswd, cursor = 'xterm', justify = CENTER)
+        self.pswdLabel = Label(self.root, text = 'Password:')
+        self.pswdEntry = Entry(self.root, textvariable = self.pswd, cursor = 'xterm', justify = CENTER)
 
-        self.ageLabel = Label(self.main, text = 'Age:')
-        self.ageEntry = Entry(self.main, textvariable = self.age, cursor = 'xterm', justify = CENTER)
+        self.ageLabel = Label(self.root, text = 'Age:')
+        self.ageEntry = Entry(self.root, textvariable = self.age, cursor = 'xterm', justify = CENTER)
 
-        self.heightLabel = Label(self.main, text = 'Height:')
-        self.heightEntry = Entry(self.main, textvariable = self.height, cursor = 'xterm', justify = CENTER)
+        self.heightLabel = Label(self.root, text = 'Height:')
+        self.heightEntry = Entry(self.root, textvariable = self.height, cursor = 'xterm', justify = CENTER)
 
-        self.weightLabel = Label(self.main, text = 'Weight:')
-        self.weightEntry = Entry(self.main, textvariable = self.weight, cursor = 'xterm', justify = CENTER)
+        self.weightLabel = Label(self.root, text = 'Weight:')
+        self.weightEntry = Entry(self.root, textvariable = self.weight, cursor = 'xterm', justify = CENTER)
 
-        self.calcButton = Button(self.main, text = 'Calculate', cursor = 'hand2', command = self.calculate)
-        self.loginButton = Button(self.main, text = 'Login', cursor = 'hand2')
+        self.calcButton = Button(self.root, text = 'Calculate', cursor = 'hand2', command = self.calculate)
+        self.loginButton = Button(self.root, text = 'Login', cursor = 'hand2')
 
-        self.bmiLabel = Label(self.main)
-        self.loginLabel = Label(self.main)
+        self.bmiLabel = Label(self.root)
+        self.loginLabel = Label(self.root)
+
+        self.client = MongoClient('localhost', 27017)
+        self.users = self.client.bmi.users
 
     def calculator(self):
         for widget in [self.ageEntry, self.heightEntry, self.weightEntry]:
@@ -69,9 +76,11 @@ class bmiCalculator:
 
         self.unameLabel.place(relx = 0.2, rely = 0.1)
         self.unameEntry.place(relx = 0.3, rely = 0.1)
+        self.unameEntry.delete(0, END)
         
         self.pswdLabel.place(relx = 0.2, rely = 0.2)
         self.pswdEntry.place(relx = 0.3, rely = 0.2)
+        self.pswdEntry.delete(0, END)
 
         self.loginButton.place(relx = 0.25, rely = 0.3)
         self.loginButton.config(command = self.validate)
@@ -86,14 +95,20 @@ class bmiCalculator:
         if not self.logged:
             self.loginLabel.config(text = 'Login to save your results and to view your history.')
             self.loginLabel.place(relx = 0.2, rely = 0.55)
-            self.main.after(1000, self.loginLabel.place_forget)
+            self.root.after(1000, self.loginLabel.place_forget)
 
     def validate(self):
-        
-        self.logged = True
-        self.loginLabel.config(text = 'Logged In Successfully.')
-        self.loginLabel.place(relx = 0.2, rely = 0.4)
-        self.main.after(1000, self.calculator)
+
+        if self.users.find_one({'uname': f'{self.uname.get()}', 'pswd': f'{self.pswd.get()}'}):
+            self.logged = True
+            self.loginLabel.config(text = 'Logged In Successfully.')
+            self.loginLabel.place(relx = 0.2, rely = 0.4)
+            self.root.after(1000, self.calculator)
+
+        else:
+            self.loginLabel.config(text = 'Login Unsuccessful.')
+            self.loginLabel.place(relx = 0.2, rely = 0.4)
+            self.root.after(1000, self.calculator)
         
     def logout(self):
         
@@ -103,15 +118,14 @@ class bmiCalculator:
         
         self.loginLabel.config(text = 'Logged Out Successfully.')
         self.loginLabel.place(relx = 0.2, rely = 0.55)
-        self.main.after(1000, self.loginLabel.place_forget)
+        self.root.after(1000, self.loginLabel.place_forget)
 
         self.loginButton.config(text = 'Login', command = self.login)
 
 if __name__ == '__main__':
 
-
     bmiCalc = bmiCalculator()
     bmiCalc.calculator()
-    bmiCalc.main.mainloop()
+    bmiCalc.root.mainloop()
 
 
