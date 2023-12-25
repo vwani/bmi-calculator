@@ -3,9 +3,10 @@ from pymongo import MongoClient
 
 # TO-DO: Create save, history button
 # TO-DO: Different units for input
-# TO-DO: Add Sign up option
+# TO-DO: Add Classification
 
 class bmiCalculator:
+    
     def __init__(self):
 
         self.root = Tk()
@@ -35,8 +36,10 @@ class bmiCalculator:
         self.weightLabel = Label(self.root, text = 'Weight:')
         self.weightEntry = Entry(self.root, textvariable = self.weight, cursor = 'xterm', justify = CENTER)
 
-        self.calcButton = Button(self.root, text = 'Calculate', cursor = 'hand2', command = self.calculate)
-        self.loginButton = Button(self.root, text = 'Login', cursor = 'hand2')
+        self.calcButton = Button(self.root, text = 'Calculate'.center(15), cursor = 'hand2', command = self.calculate)
+        self.loginButton = Button(self.root, text = 'Login'.center(15), cursor = 'hand2')
+        self.signupButton = Button(self.root, text = 'Sign Up'.center(15), cursor = 'hand2', command = self.adduser)
+        self.backButton = Button(self.root, text = 'Back'.center(15), cursor = 'hand2', command = self.calculator)
 
         self.bmiLabel = Label(self.root)
         self.loginLabel = Label(self.root)
@@ -45,10 +48,11 @@ class bmiCalculator:
         self.users = self.client.bmi.users
 
     def calculator(self):
+        
         for widget in [self.ageEntry, self.heightEntry, self.weightEntry]:
             widget.delete(0, END)
 
-        for widget in [self.unameLabel, self.pswdLabel, self.unameEntry, self.pswdEntry, self.loginLabel]:
+        for widget in [self.unameLabel, self.pswdLabel, self.unameEntry, self.pswdEntry, self.loginLabel, self.signupButton, self.backButton]:
             widget.place_forget()
             
         self.ageLabel.place(relx = 0.2, rely = 0.1)
@@ -64,10 +68,10 @@ class bmiCalculator:
         self.loginButton.place(relx = 0.35,rely = 0.4)
 
         if not self.logged:
-            self.loginButton.config(text = 'Login', command = self.login)
+            self.loginButton.config(text = 'Login'.center(15), command = self.login)
 
         if self.logged:
-            self.loginButton.config(text = 'Logout', command = self.logout)
+            self.loginButton.config(text = 'Logout'.center(15), command = self.logout)
 
     def login(self):
 
@@ -82,9 +86,11 @@ class bmiCalculator:
         self.pswdEntry.place(relx = 0.3, rely = 0.2)
         self.pswdEntry.delete(0, END)
 
-        self.loginButton.place(relx = 0.25, rely = 0.3)
+        self.loginButton.place(relx = 0.2, rely = 0.3)
         self.loginButton.config(command = self.validate)
 
+        self.signupButton.place(relx = 0.3, rely = 0.3)
+        self.backButton.place(relx = 0.4, rely = 0.3)
         
     def calculate(self):
         
@@ -97,19 +103,40 @@ class bmiCalculator:
             self.loginLabel.place(relx = 0.2, rely = 0.55)
             self.root.after(1000, self.loginLabel.place_forget)
 
+    def adduser(self):
+
+        if self.uname.get() == '' or self.pswd.get() == '':
+            self.loginLabel.config(text = 'Invalid Sign Up Attempt. Cannot leave fields empty.')
+            self.loginLabel.place(relx = 0.2, rely = 0.4)
+            self.root.after(1000, self.loginLabel.place_forget)            
+
+        elif self.users.find_one({'uname': f'{self.uname.get()}'}):
+            self.loginLabel.config(text = 'This user already exists. Please try again.')
+            self.loginLabel.place(relx = 0.2, rely = 0.4)
+            self.root.after(1000, self.loginLabel.place_forget)
+
+            
+        else:
+            self.users.insert_one({'uname': f'{self.uname.get()}', 'pswd': f'{self.pswd.get()}'})
+            self.logged = True
+            self.loginLabel.config(text = 'User Created Successfully.')
+            self.loginLabel.place(relx = 0.2, rely = 0.4)
+            self.root.after(1000, self.calculator)
+
     def validate(self):
 
         if self.users.find_one({'uname': f'{self.uname.get()}', 'pswd': f'{self.pswd.get()}'}):
+            print(self.users.find_one({'uname': f'{self.uname.get()}', 'pswd': f'{self.pswd.get()}'}))
             self.logged = True
             self.loginLabel.config(text = 'Logged In Successfully.')
             self.loginLabel.place(relx = 0.2, rely = 0.4)
             self.root.after(1000, self.calculator)
 
         else:
-            self.loginLabel.config(text = 'Login Unsuccessful.')
+            self.loginLabel.config(text = 'Login Unsuccessful. Please try again.')
             self.loginLabel.place(relx = 0.2, rely = 0.4)
-            self.root.after(1000, self.calculator)
-        
+            self.root.after(1000, self.loginLabel.place_forget)
+                 
     def logout(self):
         
         self.logged = False
@@ -120,12 +147,13 @@ class bmiCalculator:
         self.loginLabel.place(relx = 0.2, rely = 0.55)
         self.root.after(1000, self.loginLabel.place_forget)
 
-        self.loginButton.config(text = 'Login', command = self.login)
+        for widget in [self.ageEntry, self.heightEntry, self.weightEntry]:
+            widget.delete(0, END)
+
+        self.loginButton.config(text = 'Login'.center(15), command = self.login)
 
 if __name__ == '__main__':
 
     bmiCalc = bmiCalculator()
     bmiCalc.calculator()
     bmiCalc.root.mainloop()
-
-
